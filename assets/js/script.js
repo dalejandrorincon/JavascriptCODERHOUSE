@@ -2,54 +2,82 @@
 /* Comentario de más de 
 una línea -  Shortcut: Shift+alt+a */
 
-//Definición de variables
+//Se solicita al usuario la cantidad de empleados a registrar
 let cantidadEmpleados = parseInt(prompt("Ingresa el número de empleados para los cuales vas a calcular sus aportes"));
 
-let nombreEmpleado;
-let salario;
+/* ---------- Aquí inicializamos vacío el array a utilizar ----- */
+let empleados = [];
 
-let IBC;
-let aporteSalud;
-let aportePension;
-let aporteARL;
+//Creación de objeto de clase empleado
+class Empleado {
+    constructor(nombre_recibido, identificacion_recibido, salario_recibido, IBC_calculado, aporteSalud_calculado, aportePension_calculado, aporteARL_calculado){
+        this.nombre = nombre_recibido;
+        this.identificacion = identificacion_recibido;
+        this.salario = parseFloat(salario_recibido);
+        this.IBC = IBC_calculado;
+        this.aporteSalud = aporteSalud_calculado;
+        this.aportePension = aportePension_calculado;
+        this.aporteARL = aporteARL_calculado;
+        this.salarioFinal;
+        this.aportes;
+    }
 
-let salarioFinal;
-
-//Definición de funciones
-//Esta funcion solicita los datos del empleado
-function datosEmpleado() {
-    nombreEmpleado = prompt("Ingresa el nombre del empleado:");
-    salario = parseFloat(prompt("Ingresa el salario del empleado:"));
+    imprimirEmpleado(){
+        return 'Empleado: ${this.nombre} Identificación: ${this.identificacion} Salario: ${this.salario}';
+    }
+    calcularSalario(){
+        this.salarioFinal = this.salario - (this.aporteSalud + this.aportePension + this.aporteARL);
+        return 'El salario final quitando los aportes a seguridad social del empleado '+this.nombre+', es de: '+ this.salarioFinal+'$';
+    }
+    calcularAportes(){
+        this.aportes = (this.aporteSalud + this.aportePension + this.aporteARL) ;
+        return 'Los aportes a seguridad social a pagar al empleado '+ this.nombre+', es de: '+ this.aportes+'$';
+    }
+    
 }
-//Esta funcion calcula el Indice Base de Cotización (40% en colombia)
+/* --- Instanciar objeto con una función --- */
+function crearEmpleado(){
+    const nombre = prompt("Ingresa el nombre del empleado:");
+    const identificacion = prompt("Ingresa la identificación del empleado:")
+    const salario = prompt("Ingresa el salario del empleado: ");
+    const IBC = calcularIBC(salario);
+    const aportesSalud = calcularAportes_salud(IBC);
+    const aportesPension = calcularAportes_pension(IBC);
+    const aportesARL = calcularAportes_ARL(IBC);
+
+    return new Empleado(nombre, identificacion, salario, IBC, aportesSalud, aportesPension, aportesARL);
+}
+//Definición de funciones
 const calcularIBC = (salario) => {
     IBC = salario * 0.4;
     return IBC;
 };
-//Esta funcion calcula los aportes correspondientes a seguridad social
-const calcularAportes = (IBC) => {
+//Estas funciones calculan los aportes correspondientes a seguridad social
+const calcularAportes_salud = (IBC) => {
     aporteSalud = IBC * 0.125; //Los aportes a salud en Colombia son del 12.5%
+    return aporteSalud;
+};
+const calcularAportes_pension = (IBC) => {
     aportePension = IBC * 0.16; //Los aportes a pension en Colombia son del 16%
+    return aportePension;
+};
+const calcularAportes_ARL = (IBC) => {
     aporteARL = IBC * 0.00522; //Los aportes a ARL en Colombia son del 0.522%
+    return aporteARL;
 };
-//Esta funcion calcula el salario del empleado restando los aportes obligatorios de seguridad social
-const calcularSalario = (salario, aporteSalud, aportePension, aporteARL) => {
-    return salario - (aporteSalud + aportePension + aporteARL);
-};
-//Condicional que evalua que el usuario no haya ingresado un valor negativo o 0
-if (cantidadEmpleados <= 0) {
-    alert("Ingresa un valor válido");
-} else {
+/* ------------------------------------- */
+
+// Se solicitan los datos de los empleados de acuerdo a la instrucción inicial del usuario y se envian al array mediante push.
+if(cantidadEmpleados > 0){
     for (let i = 0; i < cantidadEmpleados; i++) {
-        datosEmpleado();
-        calcularIBC(salario);
-        calcularAportes(IBC);
-        console.log("Aportes seguridad social del empleado: " + nombreEmpleado);
-        console.log("De acuerdo al salario: " + salario + "$, el IBC(40%) es de: " + IBC + "$");
-        console.log("Aporte a Salud(12.5%): " + aporteSalud + "$");
-        console.log("Aporte a Pensión(16%): " + aportePension + "$");
-        console.log("Aporte a ARL(0.522%): " + aporteARL + "$");
-        console.log("Total a pagar: " + calcularSalario(salario, aporteSalud, aportePension, aporteARL) + "$");
-        console.log("----");
+        empleados.push(crearEmpleado());
     }
+    //Se presenta por consola la tabla con todos los empleados y el salario final junto con los aportes del primer empleado.
+    console.table(empleados);
+    console.log(empleados[0].calcularSalario());
+    console.log(empleados[0].calcularAportes());
 }
+
+
+
+

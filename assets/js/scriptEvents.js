@@ -1,10 +1,10 @@
 /* Constantes y variables*/
-let empleados = [];
-
 const btnAgregarEmpleado = document.getElementById('agregarEmpleado');
 const btnConsultarEmpleado = document.getElementById('consultarEmpleado');
 const btnConfirmar = document.getElementById('btnConfirmar');
 const btnVolverAlMenu = document.getElementById('volverAlMenu');
+const btnEliminar = document.getElementById('eliminarDatos');
+const btnCancelar = document.getElementById('btnCancelar');
 
 const tituloMenu = document.querySelector('.tituloMenu');
 const menuPrincipal = document.querySelector('.menuPrincipal');
@@ -29,36 +29,12 @@ class Empleado {
         this.salarioFinal;
         this.aportes;
     }
-    imprimirEmpleado() {
-        return `Empleado: ${this.nombre}\nIdentificación: ${this.identificacion}\nSalario: ${this.salario}`;
-    }
-    calcularSalario() {
-        this.salarioFinal = this.salario - (this.aporteSalud + this.aportePension + this.aporteARL);
-        return `El salario final quitando los aportes a seguridad social del empleado ${this.nombre}, es de: ${this.salarioFinal}$`;
-    }
-    calcularAportes() {
-        this.aportes = (this.aporteSalud + this.aportePension + this.aporteARL);
-        return `El aporte a seguridad social a pagar al empleado ${this.nombre}, es de: ${this.aportes}$`;
-    }
-
 }
-
-/* --- Definición de funciones--- */
-function crearEmpleado() {
-    const IBC = calcularIBC(salario.value);
-    const aportesSalud = calcularAportes_salud(IBC);
-    const aportesPension = calcularAportes_pension(IBC);
-    const aportesARL = calcularAportes_ARL(IBC);
-
-    alert("Empleado registrado");
-
-    return new Empleado(nombre.value, identificacion.value, salario.value, IBC, aportesSalud, aportesPension, aportesARL);
-}
+//Estas funciones calculan los aportes correspondientes a seguridad social
 const calcularIBC = (salario) => {
     IBC = salario * 0.4;
     return IBC;
 };
-//Estas funciones calculan los aportes correspondientes a seguridad social
 const calcularAportes_salud = (IBC) => {
     aporteSalud = IBC * 0.125; //Los aportes a salud en Colombia son del 12.5%
     return aporteSalud;
@@ -71,84 +47,159 @@ const calcularAportes_ARL = (IBC) => {
     aporteARL = IBC * 0.00522; //Los aportes a ARL en Colombia son del 0.522%
     return aporteARL;
 };
+/* --- Definición de funciones--- */
+/*Esta función valida inicialmente lo que se encuentra en el LocalStorage
+en caso de no encontrar datos, retorna un array vacio*/
+function cargarListadoEmpleados() {
+    let listadoEmpleados = JSON.parse(localStorage.getItem('listadoEmpleados'));
 
-/*-----Invocación de funciones-----*/
-function mostrarMenu(){
+    if (listadoEmpleados == null) {
+        return [];
+    }
+    return listadoEmpleados;
+}
+//Esta funcion es la encargada de crear el empleado, junto con los calculos de aportes y agregarlo al array
+function crearEmpleado() {
+    //Se declaran las constantes asociadas a los valores que se calcular para realizar los aportes.
+    const IBC = calcularIBC(salario.value);//Se pasa el valor del input para el campo salario, y este calcula el IBC.
+    //Con el IBC calculado se envia a cada una de las funciones que calculan los respectivos aportes.
+    const aportesSalud = calcularAportes_salud(IBC);
+    const aportesPension = calcularAportes_pension(IBC);
+    const aportesARL = calcularAportes_ARL(IBC);
+
+    // Esta función recupera el array guardado en el LocalStorage, para validar datos.
+    let listadoEmpleados = cargarListadoEmpleados();
+    //Se hace la carga al array listadoEmpleados de la clase Empleado.
+    listadoEmpleados.push(new Empleado(nombre.value, identificacion.value, salario.value, IBC, aportesSalud, aportesPension, aportesARL));
+
+    // Se actualiza el LocalStorage con los datos
+    localStorage.setItem("listadoEmpleados", JSON.stringify(listadoEmpleados));
+    //Se actualiza la tabla de empleados
+    mostrarListado(listadoEmpleados);
+    //Se utiliza la libreria SweetAlerts para confirmar que se cargo correctamente el empleado.
+    Swal.fire({
+        icon: 'success',
+        title: 'Empleado agregado correctamente',
+    });
+    
+    // Limpia el formulario
+    document.getElementById("formularioRegistro").reset();
+}
+function borrarDatos(){
+    localStorage.clear();
+    //Se utiliza la libreria SweetAlerts para confirmar que se eliminaron correctamente los datos.
+    Swal.fire({
+        icon: 'success',
+        title: 'Datos eliminados',
+    });
+    mostrarListado(cargarListadoEmpleados());
+    
+}
+//Esta función crea los elementos de la tabla que se agregaran al DOM
+function armarTabla(elemento) {
+    // Se crea el TR para asignar cada uno de los valores del empleado
+    const elementoTabla = document.createElement("tr");
+
+    // Se crean los campos de la tabla asociados a cada valor del elemento.
+    const nombreEmpleado = document.createElement("td");
+    nombreEmpleado.textContent = `${elemento.nombre}`;
+    nombreEmpleado.classList.add('text-center');
+    elementoTabla.appendChild(nombreEmpleado);
+
+    const identificacionEmpleado = document.createElement("td");
+    identificacionEmpleado.textContent = `${elemento.identificacion}`;
+    elementoTabla.appendChild(identificacionEmpleado);
+
+    const salarioEmpleado = document.createElement("td");
+    salarioEmpleado.textContent = `${elemento.salario}$`;
+    elementoTabla.appendChild(salarioEmpleado);
+
+    const IBCEmpleado = document.createElement("td");
+    IBCEmpleado.textContent = `${elemento.IBC}$`;
+    elementoTabla.appendChild(IBCEmpleado);
+
+    const aporteSaludEmpleado = document.createElement("td");
+    aporteSaludEmpleado.textContent = `${elemento.aporteSalud}$`;
+    elementoTabla.appendChild(aporteSaludEmpleado);
+
+    const aportePensionEmpleado = document.createElement("td");
+    aportePensionEmpleado.textContent = `${elemento.aportePension}$`;
+    elementoTabla.appendChild(aportePensionEmpleado);
+
+    const aportARLEmpleado = document.createElement("td");
+    aportARLEmpleado.textContent = `${elemento.aporteARL}$`;
+    elementoTabla.appendChild(aportARLEmpleado);
+
+    return elementoTabla;
+}
+
+function mostrarListado(listadoEmpleados) {
+    // Obtenemos el id del contenedor del listado de empleados y el elemento TBODY de la misma
+    let listado = document.getElementById('listaDeEmpleados').getElementsByTagName('tbody')[0];
+    // Se limpia el contenido para evitar duplicaciones en la impresión de datos.
+    listado.textContent = "";
+    //Para cada uno de los elementos del array se consutryen los elementos a crear en el DOM con la función armarTabla();
+    listadoEmpleados.forEach((elemento) => {
+        listado.appendChild(armarTabla(elemento));
+    });
+}
+//Esta función se encarga de agregar y remover las clases correspondientes para mostrar el menu
+function mostrarMenu() {
     tituloMenu.classList.remove('oculta');
     tituloMenu.classList.add('visible');
     menuPrincipal.classList.remove('oculta');
     menuPrincipal.classList.add('visible');
 };
-function ocultarMenu(){
+//Esta función se encarga de agregar y remover las clases correspondientes para ocultar el menu
+function ocultarMenu() {
     tituloMenu.classList.add('oculta');
     tituloMenu.classList.remove('visible');
     menuPrincipal.classList.add('oculta');
     menuPrincipal.classList.remove('visible');
 };
-function volverAlMenu(){
+//Esta función se encarga de agregar y remover las clases correspondientes para regresar al menu
+function volverAlMenu() {
     ocultarFormulario();
     ocultarTablaEmpleados();
     mostrarMenu();
 };
-function mostrarFormulario(){
+//Esta función se encarga de agregar y remover las clases correspondientes para mostrar el formulario de registro de empleados
+function mostrarFormulario() {
     mostrarFormularioRegistro.classList.remove('oculta');
     mostrarFormularioRegistro.classList.add('visible');
 };
-function ocultarFormulario(){
+//Esta función se encarga de agregar y remover las clases correspondientes para ocultar el formulario de registro de empleados
+function ocultarFormulario() {
     mostrarFormularioRegistro.classList.add('oculta');
     mostrarFormularioRegistro.classList.remove('visible');
 };
-function mostrarTablaEmpleados(){
+//Esta función se encarga de agregar y remover las clases correspondientes para mostrar la tabla con el listado completo.
+function mostrarTablaEmpleados() {
     mostrarDatos.classList.remove('oculta');
     mostrarDatos.classList.add('visible');
 };
-function ocultarTablaEmpleados(){
+//Esta función se encarga de agregar y remover las clases correspondientes para ocultar la tabla con el listado completo.
+function ocultarTablaEmpleados() {
     mostrarDatos.classList.add('oculta');
     mostrarDatos.classList.remove('visible');
 };
-btnVolverAlMenu.addEventListener('click',()=>{
-    volverAlMenu();
-});
-btnAgregarEmpleado.addEventListener('click',()=>{
+
+/*-----Eventos-----*/
+btnConfirmar.addEventListener('click', crearEmpleado);
+btnCancelar.addEventListener('click', volverAlMenu);
+btnVolverAlMenu.addEventListener('click', volverAlMenu);
+btnEliminar.addEventListener('click', borrarDatos);
+
+btnAgregarEmpleado.addEventListener('click', () => {
     ocultarMenu();
     mostrarFormulario();
 });
-btnConsultarEmpleado.addEventListener('click',()=>{
-    console.table(empleados);
-    crearHTMLInfoEmpleados(empleados);
+btnConsultarEmpleado.addEventListener('click', () => {
+    mostrarListado(cargarListadoEmpleados());
     ocultarMenu();
     mostrarTablaEmpleados();
 });
-btnConfirmar.addEventListener('click',()=>{
-    empleados.push(crearEmpleado());
-    ocultarFormulario();
-    mostrarMenu();
-});
-function crearHTMLInfoEmpleados(empleados) {
-    var tablaEmpleados = `<table>
-    <thead>
-    <tr>
-    <th>Nombre</th>
-    <th>Identificación</th>
-    <th>Salario</th>
-    <th>IBC</th>
-    <th>Aportes a Salud</th>
-    <th>Aportes a Pension</th>
-    <th>Aportes a ARL</th>
-    </tr>
-    </thead>`;
-    for (var CELL of empleados) {  
-        tablaEmpleados += `<tr>
-        <td>${CELL.nombre}</td>
-        <td>${CELL.identificacion}</td>
-        <td>${CELL.salario}$</td>
-        <td>${CELL.IBC}$</td>
-        <td>${CELL.aporteSalud}$</td>
-        <td>${CELL.aportePension}$</td>
-        <td>${CELL.aporteARL}$</td>
-        </tr>`; 
-    }
-    tablaEmpleados += "</table>";
-    document.getElementById("listaDeEmpleados").innerHTML = tablaEmpleados;
 
-}
+
+/*Invocación de la función mostrar listado, para que cargue los elementos del LocalStorage*/
+mostrarListado(cargarListadoEmpleados());

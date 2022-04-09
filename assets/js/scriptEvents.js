@@ -2,9 +2,11 @@
 const btnAgregarEmpleado = document.getElementById('agregarEmpleado');
 const btnConsultarEmpleado = document.getElementById('consultarEmpleado');
 const btnConfirmar = document.getElementById('btnConfirmar');
-const btnVolverAlMenu = document.getElementById('volverAlMenu');
+
 const btnEliminar = document.getElementById('eliminarDatos');
 const btnCancelar = document.getElementById('btnCancelar');
+//Selecciona todos los elementos con clase '.volverAlMenu' para reutilizar el boton
+const btnVolverAlMenu = document.querySelectorAll('.volverAlMenu');
 
 const tituloMenu = document.querySelector('.tituloMenu');
 const menuPrincipal = document.querySelector('.menuPrincipal');
@@ -52,14 +54,12 @@ const calcularAportes_ARL = (IBC) => {
 en caso de no encontrar datos, retorna un array vacio*/
 function cargarListadoEmpleados() {
     let listadoEmpleados = JSON.parse(localStorage.getItem('listadoEmpleados'));
-
-    if (listadoEmpleados == null) {
-        return [];
-    }
-    return listadoEmpleados;
+    //Sugar Syntax Nullish para validar si el LocalStorage está vacio
+    return listadoEmpleados ?? [];
 }
 //Esta funcion es la encargada de crear el empleado, junto con los calculos de aportes y agregarlo al array
 function crearEmpleado() {
+    
     //Se declaran las constantes asociadas a los valores que se calcular para realizar los aportes.
     const IBC = calcularIBC(salario.value);//Se pasa el valor del input para el campo salario, y este calcula el IBC.
     //Con el IBC calculado se envia a cada una de las funciones que calculan los respectivos aportes.
@@ -74,16 +74,21 @@ function crearEmpleado() {
 
     // Se actualiza el LocalStorage con los datos
     localStorage.setItem("listadoEmpleados", JSON.stringify(listadoEmpleados));
-    //Se actualiza la tabla de empleados
-    mostrarListado(listadoEmpleados);
+    
     //Se utiliza la libreria SweetAlerts para confirmar que se cargo correctamente el empleado.
     Swal.fire({
         icon: 'success',
         title: 'Empleado agregado correctamente',
+        showCloseButton: true,
+        showCancelButton: true,
+        confirmButtonText: 'Agregar nuevo empleado',
+        cancelButtonText: 'Regresar al menú',
+    }).then((result)=>{
+        //Operador ternario dentro del Swal
+        result.isConfirmed ? limpiarFormulario() : volverAlMenu(); 
     });
-    
-    // Limpia el formulario
-    document.getElementById("formularioRegistro").reset();
+    //Finaliza limpiando el formulario en caso de tener campos
+    limpiarFormulario();
 }
 function borrarDatos(){
     localStorage.clear();
@@ -94,6 +99,10 @@ function borrarDatos(){
     });
     mostrarListado(cargarListadoEmpleados());
     
+}
+const limpiarFormulario = () => {
+    // Limpia el formulario
+    document.getElementById("formularioRegistro").reset();
 }
 //Esta función crea los elementos de la tabla que se agregaran al DOM
 function armarTabla(elemento) {
@@ -186,10 +195,13 @@ function ocultarTablaEmpleados() {
 
 /*-----Eventos-----*/
 btnConfirmar.addEventListener('click', crearEmpleado);
-btnCancelar.addEventListener('click', volverAlMenu);
-btnVolverAlMenu.addEventListener('click', volverAlMenu);
-btnEliminar.addEventListener('click', borrarDatos);
+btnCancelar.addEventListener('click', limpiarFormulario);
 
+//Se agrega un forEach para aplicar la accion de volver al menu a todos los botones con clase volverAlMenu
+btnVolverAlMenu.forEach( btn => {
+    btn.onclick = () => volverAlMenu()
+})
+btnEliminar.addEventListener('click', borrarDatos);
 btnAgregarEmpleado.addEventListener('click', () => {
     ocultarMenu();
     mostrarFormulario();
@@ -199,7 +211,6 @@ btnConsultarEmpleado.addEventListener('click', () => {
     ocultarMenu();
     mostrarTablaEmpleados();
 });
-
 
 /*Invocación de la función mostrar listado, para que cargue los elementos del LocalStorage*/
 mostrarListado(cargarListadoEmpleados());

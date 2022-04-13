@@ -1,9 +1,16 @@
 body {
     background-image: linear-gradient(180deg, #eee, #fff 100px, #fff);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
 }  
-.container {
-    max-width: 960px;
+h1{
+    font-size: 3.5rem;
+    font-weight: 800;
 }
+h2{
+    font-weight: 600;
+}
+
 .pricing-header {
     max-width: 700px;
 }
@@ -17,11 +24,18 @@ table {
     border-collapse: collapse;
     width: 100%;
 }
+th {
+    border-bottom: 1px solid #dddddd;
+}
 td, th {
-    border: 1px solid #dddddd;
     text-align: center;
     padding: 8px;
 }
+
 tr:nth-child(even) {
     background-color: #eeeeee;
+}
+.btn-dark:hover{
+    background-color: #dc3545;
+    border-color: #dc3545;
 }

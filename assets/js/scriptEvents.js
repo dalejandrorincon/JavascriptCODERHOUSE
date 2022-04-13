@@ -20,35 +20,28 @@ const salario = document.getElementById('salario');
 
 //Creación de objeto de clase empleado
 class Empleado {
-    constructor(nombre_recibido, identificacion_recibido, salario_recibido, IBC_calculado, aporteSalud_calculado, aportePension_calculado, aporteARL_calculado) {
+    constructor(nombre_recibido, identificacion_recibido, salario_recibido) {
         this.nombre = nombre_recibido;
         this.identificacion = identificacion_recibido;
         this.salario = parseFloat(salario_recibido);
-        this.IBC = IBC_calculado;
-        this.aporteSalud = aporteSalud_calculado;
-        this.aportePension = aportePension_calculado;
-        this.aporteARL = aporteARL_calculado;
-        this.salarioFinal;
-        this.aportes;
+        this.IBC = this.calcularIBC(this.salario);
+        this.aporteSalud = this.calcularAportes_salud(this.IBC);
+        this.aportePension = this.calcularAportes_pension(this.IBC);
+        this.aporteARL = this.calcularAportes_ARL(this.IBC);
+    }
+    calcularIBC(salario){
+        return salario * 0.4;
+    }
+    calcularAportes_salud(IBC){
+        return IBC * 0.125; //Los aportes a salud en Colombia son del 12.5%
+    }
+    calcularAportes_pension(IBC){
+        return IBC * 0.16; //Los aportes a pension en Colombia son del 16%
+    }
+    calcularAportes_ARL(IBC){
+        return IBC * 0.00522; //Los aportes a ARL en Colombia son del 0.522%
     }
 }
-//Estas funciones calculan los aportes correspondientes a seguridad social
-const calcularIBC = (salario) => {
-    IBC = salario * 0.4;
-    return IBC;
-};
-const calcularAportes_salud = (IBC) => {
-    aporteSalud = IBC * 0.125; //Los aportes a salud en Colombia son del 12.5%
-    return aporteSalud;
-};
-const calcularAportes_pension = (IBC) => {
-    aportePension = IBC * 0.16; //Los aportes a pension en Colombia son del 16%
-    return aportePension;
-};
-const calcularAportes_ARL = (IBC) => {
-    aporteARL = IBC * 0.00522; //Los aportes a ARL en Colombia son del 0.522%
-    return aporteARL;
-};
 /* --- Definición de funciones--- */
 /*Esta función valida inicialmente lo que se encuentra en el LocalStorage
 en caso de no encontrar datos, retorna un array vacio*/
@@ -60,35 +53,45 @@ function cargarListadoEmpleados() {
 //Esta funcion es la encargada de crear el empleado, junto con los calculos de aportes y agregarlo al array
 function crearEmpleado() {
     
-    //Se declaran las constantes asociadas a los valores que se calcular para realizar los aportes.
-    const IBC = calcularIBC(salario.value);//Se pasa el valor del input para el campo salario, y este calcula el IBC.
-    //Con el IBC calculado se envia a cada una de las funciones que calculan los respectivos aportes.
-    const aportesSalud = calcularAportes_salud(IBC);
-    const aportesPension = calcularAportes_pension(IBC);
-    const aportesARL = calcularAportes_ARL(IBC);
-
     // Esta función recupera el array guardado en el LocalStorage, para validar datos.
     let listadoEmpleados = cargarListadoEmpleados();
-    //Se hace la carga al array listadoEmpleados de la clase Empleado.
-    listadoEmpleados.push(new Empleado(nombre.value, identificacion.value, salario.value, IBC, aportesSalud, aportesPension, aportesARL));
+    //Condicional que valida que el usuario no haya dejado algún campo del formulario vacio.
+    if(nombre.value != "" && identificacion.value != "" && salario.value != ""){
+        //Se hace la carga al array listadoEmpleados de la clase Empleado.
+        listadoEmpleados.push(new Empleado(nombre.value, identificacion.value, salario.value));
 
-    // Se actualiza el LocalStorage con los datos
-    localStorage.setItem("listadoEmpleados", JSON.stringify(listadoEmpleados));
+        // Se actualiza el LocalStorage con los datos
+        localStorage.setItem("listadoEmpleados", JSON.stringify(listadoEmpleados));
+        
+        //Se utiliza la libreria SweetAlerts para confirmar que se cargo correctamente el empleado.
+        const swalWithBootstrapButtons = Swal.mixin({
+            customClass: {
+                confirmButton: 'btn btn-success',
+                cancelButton: 'btn btn-danger mx-2'
+            },
+            buttonsStyling: false
+        })
+        swalWithBootstrapButtons.fire({
+            icon: 'success',
+            title: 'Empleado agregado correctamente',
+            showCancelButton: true,
+            confirmButtonText: 'Agregar nuevo empleado',
+            cancelButtonText: 'Regresar al menú',
+        }).then((result)=>{
+            //Operador ternario dentro del Swal
+            result.isConfirmed ? limpiarFormulario() : volverAlMenu(); 
+        });
+        //Finaliza limpiando el formulario en caso de tener campos
+        limpiarFormulario();
+    }else{
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops.. No llenaste todos los campos',
+            showCloseButton: true,
+        })
+    }
+
     
-    //Se utiliza la libreria SweetAlerts para confirmar que se cargo correctamente el empleado.
-    Swal.fire({
-        icon: 'success',
-        title: 'Empleado agregado correctamente',
-        showCloseButton: true,
-        showCancelButton: true,
-        confirmButtonText: 'Agregar nuevo empleado',
-        cancelButtonText: 'Regresar al menú',
-    }).then((result)=>{
-        //Operador ternario dentro del Swal
-        result.isConfirmed ? limpiarFormulario() : volverAlMenu(); 
-    });
-    //Finaliza limpiando el formulario en caso de tener campos
-    limpiarFormulario();
 }
 function borrarDatos(){
     localStorage.clear();
@@ -108,7 +111,7 @@ const limpiarFormulario = () => {
 function armarTabla(elemento) {
     // Se crea el TR para asignar cada uno de los valores del empleado
     const elementoTabla = document.createElement("tr");
-
+    
     // Se crean los campos de la tabla asociados a cada valor del elemento.
     const nombreEmpleado = document.createElement("td");
     nombreEmpleado.textContent = `${elemento.nombre}`;
@@ -139,9 +142,47 @@ function armarTabla(elemento) {
     aportARLEmpleado.textContent = `${elemento.aporteARL}$`;
     elementoTabla.appendChild(aportARLEmpleado);
 
+    const eliminarEmpleado = document.createElement("td");
+    eliminarEmpleado.innerHTML = `<button id="eliminar${elemento.identificacion}"  onclick="eliminarEmpleado('eliminar${elemento.identificacion}')" type="button" class="btn btn-dark">Eliminar</button>`
+    elementoTabla.appendChild(eliminarEmpleado);
+
     return elementoTabla;
 }
-
+function eliminarEmpleado(identificacionEmpleado){
+    console.log(`Eliminar empleado con id: ${identificacionEmpleado}`);
+    let listadoEmpleados = JSON.parse(localStorage.getItem("listadoEmpleados"));
+    // Buscamos el empleado en el localStorage
+    let buscarEmpleado = listadoEmpleados.find((elemento) => `eliminar${elemento.identificacion}` == identificacionEmpleado);
+    console.log(`El empleado a eliminar se llama: ${buscarEmpleado.nombre}`);
+    //Buscamos el index dentro del array listadoEmpleados
+    let indexEmpleado = listadoEmpleados.findIndex((element) => {
+        if (element.identificacion === buscarEmpleado.identificacion) {
+            return true;
+        }
+    });
+    console.log(`index del empleado: ${indexEmpleado}`);
+    listadoEmpleados.splice(indexEmpleado,1);
+    
+    //En caso de ser el ultimo elemento, le da valor de array vacio.
+    if (listadoEmpleados.length === 0) {
+        listadoEmpleados = [];
+    }
+    // Se actualiza el LocalStorage con los datos
+    localStorage.setItem("listadoEmpleados", JSON.stringify(listadoEmpleados));
+    //Se hace uso de la libreria Toastify para notificar que el empleado se elimina correctamente
+    Toastify({
+        text: "Empleado eliminado correctamente",
+        duration: 3000,
+        offset: {
+          x: 50, // horizontal axis - can be a number or a string indicating unity. eg: '2em'
+          y: 10 // vertical axis - can be a number or a string indicating unity. eg: '2em'
+        },
+        close: true,
+        backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
+        gravity: top,
+    }).showToast();
+    mostrarListado(cargarListadoEmpleados());
+}
 function mostrarListado(listadoEmpleados) {
     // Obtenemos el id del contenedor del listado de empleados y el elemento TBODY de la misma
     let listado = document.getElementById('listaDeEmpleados').getElementsByTagName('tbody')[0];

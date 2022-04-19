@@ -102,6 +102,21 @@
       <section class="mostrarDatos oculta">
         <h2 class="w-75 mx-auto text-center">Listado de empleados</h2>
         <div id="listaDeEmpleados" class="table-responsive">
+          <div class="container mb-4 d-flex justify-content-center">
+            <div class="row d-flex align-items-center">
+              <div class="col">
+                <select id="tipoMoneda" class="text-center">
+                  <option value="COP">COP</option>
+                  <option value="ARS">ARS</option>
+                  <option value="USD">USD</option>
+                </select>
+              </div>
+              <div class="col">
+                <button id="cambiarMoneda" class="btn btn-light">Cambiar</button>
+              </div>
+            </div>
+            
+          </div>
           <table>
             <thead>
               <tr>
@@ -126,8 +141,6 @@
     </main>
   </div>
   <!--<script src="/assets/js/scriptEvents.js"></script>-->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"
-    integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
   <script src="/assets/js/scriptEvents.js"></script>
   <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
